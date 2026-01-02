@@ -17,4 +17,20 @@ public class Income extends Transaction {
     public String getCategoryOrSource() {
         return source;
     }
+
+    public String getSource() {
+        return source;
+    }
+
+    public static Income fromFileString(String fileString) {
+        String[] parts = fileString.split("\\|");
+        if (parts.length >= 5) {
+            String name = parts[1];
+            double amount = Double.parseDouble(parts[2]);
+            String source = parts[3];
+            LocalDate date = LocalDate.parse(parts[4]);
+            return new Income(name, amount, source, date);
+        }
+        return null;
+    }
 }

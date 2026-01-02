@@ -31,6 +31,19 @@ public abstract class Transaction {
     public String formatForDisplay() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         return String.format("%-10s | %-20s | $%-10.2f | %-15s | %s",
-                getType(), name, amount, getCategoryOrSource(), date.format(formatter));
+                getType(),
+                name,
+                amount,
+                getCategoryOrSource(),
+                date.format(formatter));
+    }
+
+    public String formatForFile() {
+        return String.format("%s|%s|%.2f|%s|%s",
+                getType(),
+                name,
+                amount,
+                getCategoryOrSource(),
+                date.toString());
     }
 }

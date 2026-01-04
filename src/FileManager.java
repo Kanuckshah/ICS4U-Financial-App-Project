@@ -1,4 +1,5 @@
 import java.io.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,6 +26,12 @@ public class FileManager {
             writer.println("PASSWORD:" + user.getPassword());
             writer.println("BUDGET:" + user.getMonthlyBudget());
             writer.println("SAVINGS_GOAL:" + user.getSavingsGoal());
+            if (user.getSavingsTargetDate() != null) {
+                writer.println("SAVINGS_TARGET_DATE:" + user.getSavingsTargetDate().toString());
+            }
+            if (user.getSavingsTargetMonths() > 0) {
+                writer.println("SAVINGS_TARGET_MONTHS:" + user.getSavingsTargetMonths());
+            }
             writer.println("TRANSACTIONS_START");
 
             for (Transaction transaction : user.getTransactions()) {
@@ -34,7 +41,7 @@ public class FileManager {
             writer.println("TRANSACTIONS_END");
             return true;
         } catch (IOException e) {
-            IO.println("Error saving user data: " + e.getMessage());
+            System.err.println("Error saving user data: " + e.getMessage());
             return false;
         }
     }
@@ -52,6 +59,8 @@ public class FileManager {
             String password = null;
             double budget = 0.0;
             double savingsGoal = 0.0;
+            LocalDate savingsTargetDate = null;
+            int savingsTargetMonths = 0;
             List<Transaction> transactions = new ArrayList<>();
             boolean inTransactions = false;
 
@@ -63,6 +72,16 @@ public class FileManager {
                     budget = Double.parseDouble(line.substring("BUDGET:".length()));
                 } else if (line.startsWith("SAVINGS_GOAL:")) {
                     savingsGoal = Double.parseDouble(line.substring("SAVINGS_GOAL:".length()));
+                } else if (line.startsWith("SAVINGS_TARGET_DATE:")) {
+                    try {
+                        savingsTargetDate = LocalDate.parse(line.substring("SAVINGS_TARGET_DATE:".length()));
+                    } catch (Exception e) {
+                    }
+                } else if (line.startsWith("SAVINGS_TARGET_MONTHS:")) {
+                    try {
+                        savingsTargetMonths = Integer.parseInt(line.substring("SAVINGS_TARGET_MONTHS:".length()));
+                    } catch (Exception e) {
+                    }
                 } else if (line.equals("TRANSACTIONS_START")) {
                     inTransactions = true;
                 } else if (line.equals("TRANSACTIONS_END")) {
@@ -79,15 +98,21 @@ public class FileManager {
                 User user = new User(username, password);
                 user.setMonthlyBudget(budget);
                 user.setSavingsGoal(savingsGoal);
+                if (savingsTargetDate != null) {
+                    user.setSavingsTargetDate(savingsTargetDate);
+                }
+                if (savingsTargetMonths > 0) {
+                    user.setSavingsTargetMonths(savingsTargetMonths);
+                }
                 for (Transaction transaction : transactions) {
                     user.addTransaction(transaction);
                 }
                 return user;
             }
         } catch (IOException e) {
-            IO.println("Error loading user data: " + e.getMessage());
+            System.err.println("Error loading user data: " + e.getMessage());
         } catch (NumberFormatException e) {
-            IO.println("Error parsing user data: " + e.getMessage());
+            System.err.println("Error parsing user data: " + e.getMessage());
         }
 
         return null;

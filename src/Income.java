@@ -22,6 +22,10 @@ public class Income extends Transaction {
         return source;
     }
 
+    public void setSource(String source) {
+        this.source = source;
+    }
+
     public static Income fromFileString(String fileString) {
         String[] parts = fileString.split("\\|");
         if (parts.length >= 5) {

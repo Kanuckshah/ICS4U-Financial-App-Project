@@ -24,6 +24,20 @@ public abstract class Transaction {
         return date;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setAmount(double amount) {
+        if (amount > 0) {
+            this.amount = amount;
+        }
+    }
+
+    public void setDate(LocalDate date) {
+        this.date = date;
+    }
+
     public abstract String getType();
 
     public abstract String getCategoryOrSource();

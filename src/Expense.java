@@ -22,6 +22,10 @@ public class Expense extends Transaction {
         return category;
     }
 
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
     public static Expense fromFileString(String fileString) {
         String[] parts = fileString.split("\\|");
         if (parts.length >= 5) {

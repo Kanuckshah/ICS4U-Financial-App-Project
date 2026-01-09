@@ -1,7 +1,15 @@
+
+import javax.swing.SwingUtilities;
+
 public class Main {
 
     public static void main(String[] args) {
-        FinanceApp app = new FinanceApp();
-        app.start();
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                FinanceGUI gui = new FinanceGUI();
+                gui.display();
+            }
+        });
     }
 }

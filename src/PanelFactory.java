@@ -1,9 +1,11 @@
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
@@ -16,7 +18,6 @@ import java.util.stream.Collectors;
 
 public class PanelFactory {
 
-    // Interface to access FinanceGUI methods without circular dependency
     public interface GUIController {
         boolean login(String username, String password);
 
@@ -51,88 +52,56 @@ public class PanelFactory {
 
     public static JPanel createLoginPanel(GUIController gui) {
         FormPanel panel = new FormPanel("Student Finance Tracker");
-
         List<FormField> fields = new ArrayList<>();
         fields.add(new FormField("username", "Username:", FormField.FieldType.TEXT));
         fields.add(new FormField("password", "Password:", FormField.FieldType.PASSWORD));
-
         panel.addFields(fields);
-
-        panel.addButton("Login", new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String username = panel.getFieldValue("username");
-                String password = panel.getFieldValue("password");
-
-                if (username.isEmpty() || password.isEmpty()) {
-                    gui.showError("Please enter both username and password.", "Login Error");
-                    return;
-                }
-
-                if (gui.login(username, password)) {
-                    panel.clearFields();
-                } else {
-                    gui.showError("Invalid username or password.", "Login Error");
-                }
+        panel.addButton("Login", e -> {
+            String username = panel.getFieldValue("username");
+            String password = panel.getFieldValue("password");
+            if (username.isEmpty() || password.isEmpty()) {
+                gui.showError("Please enter both username and password.", "Login Error");
+                return;
+            }
+            if (gui.login(username, password)) {
+                panel.clearFields();
+            } else {
+                gui.showError("Invalid username or password.", "Login Error");
             }
         });
-
-        panel.addButton("Register", new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                gui.showRegister();
-            }
-        });
-
+        panel.addButton("Register", e -> gui.showRegister());
         return panel;
     }
 
     public static JPanel createRegistrationPanel(GUIController gui) {
         FormPanel panel = new FormPanel("Create Account");
-
         List<FormField> fields = new ArrayList<>();
         fields.add(new FormField("username", "Username:", FormField.FieldType.TEXT));
         fields.add(new FormField("password", "Password:", FormField.FieldType.PASSWORD));
         fields.add(new FormField("confirmPassword", "Confirm Password:", FormField.FieldType.PASSWORD));
-
         panel.addFields(fields);
-
-        panel.addButton("Register", new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String username = panel.getFieldValue("username");
-                String password = panel.getFieldValue("password");
-                String confirmPassword = panel.getFieldValue("confirmPassword");
-
-                if (username.isEmpty() || password.isEmpty()) {
-                    gui.showError("Please fill in all fields.", "Registration Error");
-                    return;
-                }
-
-                if (!password.equals(confirmPassword)) {
-                    gui.showError("Passwords do not match.", "Registration Error");
-                    return;
-                }
-
-                if (gui.register(username, password)) {
-                    panel.clearFields();
-                }
+        panel.addButton("Register", e -> {
+            String username = panel.getFieldValue("username");
+            String password = panel.getFieldValue("password");
+            String confirmPassword = panel.getFieldValue("confirmPassword");
+            if (username.isEmpty() || password.isEmpty()) {
+                gui.showError("Please fill in all fields.", "Registration Error");
+                return;
+            }
+            if (!password.equals(confirmPassword)) {
+                gui.showError("Passwords do not match.", "Registration Error");
+                return;
+            }
+            if (gui.register(username, password)) {
+                panel.clearFields();
             }
         });
-
-        panel.addButton("Back to Login", new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                gui.showLogin();
-            }
-        });
-
+        panel.addButton("Back to Login", e -> gui.showLogin());
         return panel;
     }
 
     public static JPanel createAddTransactionPanel(GUIController gui, boolean isIncome) {
         FormPanel panel = new FormPanel(isIncome ? "Add Income" : "Add Expense");
-
         List<FormField> fields = new ArrayList<>();
         fields.add(new FormField("name", "Name/Description:", FormField.FieldType.TEXT, "", true, "", 30));
         fields.add(new FormField("amount", "Amount ($):", FormField.FieldType.NUMBER, "", true, "", 30));
@@ -140,72 +109,43 @@ public class PanelFactory {
                 true, "", 30));
         fields.add(new FormField("date", "Date (YYYY-MM-DD):", FormField.FieldType.DATE, LocalDate.now().toString(),
                 true, "", 30));
-
         panel.addFields(fields);
-
-        panel.addButton("Save", new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String name = panel.getFieldValue("name");
-                String amountStr = panel.getFieldValue("amount");
-                String categorySource = panel.getFieldValue("categorySource");
-                String dateStr = panel.getFieldValue("date");
-
-                if (name.isEmpty() || amountStr.isEmpty() || categorySource.isEmpty() || dateStr.isEmpty()) {
-                    gui.showError("Please fill in all fields.", "Validation Error");
+        panel.addButton("Save", e -> {
+            String name = panel.getFieldValue("name");
+            String amountStr = panel.getFieldValue("amount");
+            String categorySource = panel.getFieldValue("categorySource");
+            String dateStr = panel.getFieldValue("date");
+            if (name.isEmpty() || amountStr.isEmpty() || categorySource.isEmpty() || dateStr.isEmpty()) {
+                gui.showError("Please fill in all fields.", "Validation Error");
+                return;
+            }
+            try {
+                double amount = Double.parseDouble(amountStr);
+                if (amount <= 0) {
+                    gui.showError("Amount must be positive.", "Validation Error");
                     return;
                 }
-
-                double amount;
-                try {
-                    amount = Double.parseDouble(amountStr);
-                    if (amount <= 0) {
-                        gui.showError("Amount must be positive.", "Validation Error");
-                        return;
-                    }
-                } catch (NumberFormatException ex) {
-                    gui.showError("Invalid amount format.", "Validation Error");
-                    return;
-                }
-
-                LocalDate date;
-                try {
-                    date = LocalDate.parse(dateStr);
-                } catch (DateTimeParseException ex) {
-                    gui.showError("Invalid date format. Use YYYY-MM-DD.", "Validation Error");
-                    return;
-                }
-
+                LocalDate date = LocalDate.parse(dateStr);
                 User user = gui.getCurrentUser();
-                if (user == null)
-                    return;
-
-                Transaction transaction;
-                if (isIncome) {
-                    transaction = new Income(name, amount, categorySource, date);
-                } else {
-                    transaction = new Expense(name, amount, categorySource, date);
+                if (user != null) {
+                    Transaction transaction = isIncome ? new Income(name, amount, categorySource, date)
+                            : new Expense(name, amount, categorySource, date);
+                    user.addTransaction(transaction);
+                    gui.refreshAllPanels();
+                    gui.showMessage("Transaction added successfully!", "Success");
+                    gui.showDashboard();
                 }
-
-                user.addTransaction(transaction);
-                gui.refreshAllPanels();
-                gui.showMessage("Transaction added successfully!", "Success");
-                gui.showDashboard();
+            } catch (Exception ex) {
+                gui.showError("Invalid input.", "Validation Error");
             }
         });
-
-        panel.addButton("Cancel", new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                gui.showDashboard();
-            }
-        });
-
+        panel.addButton("Cancel", e -> gui.showDashboard());
         return panel;
     }
 
     public static RefreshablePanel createDashboardPanel(GUIController gui) {
         ContentPanel panel = new ContentPanel("Dashboard", true);
+        panel.getHeaderPanel().setVisible(false);
 
         // Setup sidebar
         Sidebar sidebar = panel.getSidebar();
@@ -216,655 +156,757 @@ public class PanelFactory {
         sidebar.addMenuItem("Budget & Savings", e -> gui.showBudgetSavings());
         sidebar.addMenuItem("Reports", e -> gui.showReports());
         sidebar.addLogoutButton(e -> {
-            int response = JOptionPane.showConfirmDialog(
-                    panel,
-                    "Do you want to logout and save?",
-                    "Logout",
-                    JOptionPane.YES_NO_OPTION);
-            if (response == JOptionPane.YES_OPTION) {
+            if (JOptionPane.showConfirmDialog(panel, "Do you want to logout?", "Logout",
+                    JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
                 gui.logout();
             }
         });
+        sidebar.selectMenuItem("Dashboard");
 
-        // Setup content layout
-        panel.setContentLayout(new BorderLayout());
+        // ===== NEW GRIDBAGLAYOUT =====
+        JPanel dashboardContent = new JPanel(new GridBagLayout());
+        dashboardContent.setOpaque(false);
+        dashboardContent.setBorder(new EmptyBorder(30, 30, 30, 30));
 
-        JPanel statsPanel = new JPanel(new GridLayout(2, 3, 20, 20));
-        statsPanel.setBackground(Color.WHITE);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.BOTH;
 
-        StatCard balanceCard = panel.addStatCard("Current Balance", "$0.00", Color.WHITE);
-        StatCard incomeCard = panel.addStatCard("Total Income", "$0.00", Color.WHITE);
-        StatCard expensesCard = panel.addStatCard("Total Expenses", "$0.00", Color.WHITE);
-        StatCard budgetCard = panel.addStatCard("Budget Status", "Not Set", Color.WHITE);
-        StatCard savingsCard = panel.addStatCard("Savings Goal", "Not Set", Color.WHITE);
+        // === 1. HEADER SECTION (Row 0) ===
+        JPanel headerSection = new JPanel();
+        headerSection.setLayout(new BoxLayout(headerSection, BoxLayout.Y_AXIS));
+        headerSection.setOpaque(false);
 
-        statsPanel.add(balanceCard);
-        statsPanel.add(incomeCard);
-        statsPanel.add(expensesCard);
-        statsPanel.add(budgetCard);
-        statsPanel.add(savingsCard);
+        JLabel welcomeLabel = new JLabel("Welcome back!");
+        welcomeLabel.setFont(Theme.FONT_TITLE);
+        welcomeLabel.setForeground(Theme.TEXT_PRIMARY);
+        welcomeLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JPanel budgetProgressPanel = new JPanel(new BorderLayout());
-        budgetProgressPanel.setBorder(BorderFactory.createTitledBorder("Monthly Budget Usage"));
-        budgetProgressPanel.setBackground(Color.WHITE);
-        JProgressBar budgetProgressBar = new JProgressBar(0, 100);
-        budgetProgressBar.setStringPainted(true);
-        budgetProgressBar.setString("0%");
-        budgetProgressPanel.add(budgetProgressBar, BorderLayout.CENTER);
-        statsPanel.add(budgetProgressPanel);
+        JLabel dateLabel = new JLabel(LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy")));
+        dateLabel.setFont(Theme.FONT_BODY);
+        dateLabel.setForeground(Theme.TEXT_SECONDARY);
+        dateLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        panel.addToContent(statsPanel, BorderLayout.CENTER);
+        headerSection.add(welcomeLabel);
+        headerSection.add(Box.createVerticalStrut(5));
+        headerSection.add(dateLabel);
 
-        JPanel savingsPanel = new JPanel(new BorderLayout());
-        savingsPanel.setBorder(BorderFactory.createTitledBorder("Savings Goal Progress"));
-        savingsPanel.setBackground(Color.WHITE);
-        JProgressBar savingsProgressBar = new JProgressBar(0, 100);
-        savingsProgressBar.setStringPainted(true);
-        savingsProgressBar.setString("0%");
-        savingsPanel.add(savingsProgressBar, BorderLayout.CENTER);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 4; // Span across all columns
+        gbc.weightx = 1.0;
+        gbc.weighty = 0.0; // Don't grow vertically
+        dashboardContent.add(headerSection, gbc);
 
-        panel.addToContent(savingsPanel, BorderLayout.SOUTH);
+        // === 2. STATS CARDS (Row 1) ===
+        // We want 4 cards. We can put them in a single row, 1 col each.
+        StatCard balanceCard = new StatCard("Total Balance", "$0.00", "💰", Theme.PRIMARY);
+        StatCard incomeCard = new StatCard("Monthly Income", "$0.00", "📈", Theme.SUCCESS);
+        StatCard expensesCard = new StatCard("Monthly Expenses", "$0.00", "💸", Theme.DANGER);
+        StatCard savingsCard = new StatCard("Net Savings", "$0.00", "🐷", Theme.INFO);
+
+        gbc.gridy = 1;
+        gbc.gridwidth = 1;
+        gbc.weightx = 0.25; // Equal width
+        gbc.weighty = 0.0;
+        gbc.ipady = 20; // Internal padding for height
+
+        gbc.gridx = 0;
+        dashboardContent.add(balanceCard, gbc);
+
+        gbc.gridx = 1;
+        dashboardContent.add(incomeCard, gbc);
+
+        gbc.gridx = 2;
+        dashboardContent.add(expensesCard, gbc);
+
+        gbc.gridx = 3;
+        dashboardContent.add(savingsCard, gbc);
+
+        gbc.ipady = 0; // Reset
+
+        // === 3. BOTTOM SECTION (Row 2) ===
+        // Left: Financial Health, Right: Transactions
+        // We'll give them gridwidth 2 each.
+
+        // --- Left: Financial Health ---
+        RoundedPanel healthPanel = new RoundedPanel(Theme.RADIUS_MEDIUM, null); // No border
+        healthPanel.setBackground(Theme.SURFACE); // Explicitly set background
+        healthPanel.setLayout(new BoxLayout(healthPanel, BoxLayout.Y_AXIS));
+        healthPanel.setBorder(new EmptyBorder(25, 25, 25, 25));
+
+        JLabel healthTitle = new JLabel("Financial Health");
+        healthTitle.setFont(Theme.FONT_HEADING);
+        healthTitle.setForeground(Theme.TEXT_PRIMARY);
+        healthTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+        healthPanel.add(healthTitle);
+        healthPanel.add(Box.createVerticalStrut(20));
+
+        // Budget
+        JLabel budgetLabel = new JLabel("Monthly Budget");
+        budgetLabel.setFont(Theme.FONT_SUBHEADING);
+        budgetLabel.setForeground(Theme.TEXT_SECONDARY);
+        budgetLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        healthPanel.add(budgetLabel);
+        healthPanel.add(Box.createVerticalStrut(8));
+
+        JProgressBar budgetProgress = new JProgressBar(0, 100);
+        budgetProgress.setMaximumSize(new Dimension(Integer.MAX_VALUE, 10)); // Thinner bar
+        budgetProgress.setStringPainted(false); // Clean look
+        budgetProgress.setBackground(Theme.BACKGROUND);
+        budgetProgress.setForeground(Theme.PRIMARY);
+        budgetProgress.setAlignmentX(Component.LEFT_ALIGNMENT);
+        budgetProgress.setBorderPainted(false); // Removing border for cleaner look
+        healthPanel.add(budgetProgress);
+
+        JLabel budgetStatus = new JLabel("Not set");
+        budgetStatus.setFont(Theme.FONT_SMALL);
+        budgetStatus.setForeground(Theme.TEXT_SECONDARY);
+        budgetStatus.setAlignmentX(Component.LEFT_ALIGNMENT);
+        healthPanel.add(Box.createVerticalStrut(5));
+        healthPanel.add(budgetStatus);
+
+        healthPanel.add(Box.createVerticalStrut(25));
+
+        // Savings
+        JLabel savingsLabel = new JLabel("Savings Goal");
+        savingsLabel.setFont(Theme.FONT_SUBHEADING);
+        savingsLabel.setForeground(Theme.TEXT_SECONDARY);
+        savingsLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        healthPanel.add(savingsLabel);
+        healthPanel.add(Box.createVerticalStrut(8));
+
+        JProgressBar savingsProgress = new JProgressBar(0, 100);
+        savingsProgress.setMaximumSize(new Dimension(Integer.MAX_VALUE, 10));
+        savingsProgress.setStringPainted(false);
+        savingsProgress.setBackground(Theme.BACKGROUND);
+        savingsProgress.setForeground(Theme.INFO);
+        savingsProgress.setAlignmentX(Component.LEFT_ALIGNMENT);
+        savingsProgress.setBorderPainted(false);
+        healthPanel.add(savingsProgress);
+
+        JLabel savingsStatus = new JLabel("Not set");
+        savingsStatus.setFont(Theme.FONT_SMALL);
+        savingsStatus.setForeground(Theme.TEXT_SECONDARY);
+        savingsStatus.setAlignmentX(Component.LEFT_ALIGNMENT);
+        healthPanel.add(Box.createVerticalStrut(5));
+        healthPanel.add(savingsStatus);
+        healthPanel.add(Box.createVerticalGlue());
+
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.gridwidth = 2; // Span 2 columns
+        gbc.weightx = 0.5;
+        gbc.weighty = 0.6; // Give it some vertical growth but not too much
+        dashboardContent.add(healthPanel, gbc);
+
+        // --- Right: Recent Transactions ---
+        RoundedPanel transactionsPanel = new RoundedPanel(Theme.RADIUS_MEDIUM, null); // No border
+        transactionsPanel.setBackground(Theme.SURFACE); // Explicitly set background
+        transactionsPanel.setLayout(new BorderLayout());
+        transactionsPanel.setBorder(new EmptyBorder(25, 25, 25, 25));
+
+        JPanel transHeader = new JPanel(new BorderLayout());
+        transHeader.setOpaque(false);
+
+        JLabel transTitle = new JLabel("Recent Transactions");
+        transTitle.setFont(Theme.FONT_HEADING);
+        transTitle.setForeground(Theme.TEXT_PRIMARY);
+
+        JButton viewAll = Theme.createButton("View All", false);
+        viewAll.setFont(Theme.FONT_SMALL);
+        viewAll.setPreferredSize(new Dimension(80, 28));
+        viewAll.addActionListener(e -> gui.showTransactions());
+
+        transHeader.add(transTitle, BorderLayout.WEST);
+        transHeader.add(viewAll, BorderLayout.EAST);
+        transactionsPanel.add(transHeader, BorderLayout.NORTH);
+
+        JPanel transList = new JPanel();
+        transList.setLayout(new BoxLayout(transList, BoxLayout.Y_AXIS));
+        transList.setOpaque(false);
+
+        JScrollPane transScroll = new JScrollPane(transList);
+        transScroll.setBorder(null);
+        transScroll.setOpaque(false);
+        transScroll.getViewport().setOpaque(false);
+        transScroll.getVerticalScrollBar().setUnitIncrement(16);
+        transactionsPanel.add(transScroll, BorderLayout.CENTER);
+
+        gbc.gridx = 2;
+        gbc.gridy = 2;
+        gbc.gridwidth = 2; // Span 2 columns
+        gbc.weightx = 0.5;
+        gbc.weighty = 1.0;
+        dashboardContent.add(transactionsPanel, gbc);
+
+        // Add to main scroll pane
+        JScrollPane mainScroll = new JScrollPane(dashboardContent);
+        mainScroll.setBorder(null);
+        mainScroll.setOpaque(false);
+        mainScroll.getViewport().setOpaque(false);
+        mainScroll.getVerticalScrollBar().setUnitIncrement(16);
+
+        panel.addToContent(mainScroll, BorderLayout.CENTER);
 
         return new RefreshablePanel(panel) {
             @Override
             public void refresh() {
+                sidebar.selectMenuItem("Dashboard");
                 User user = gui.getCurrentUser();
                 if (user == null)
                     return;
 
-                List<Transaction> transactions = user.getTransactions();
-                double[] totals = FinanceManager.calculateTotals(transactions);
-                double income = totals[0];
-                double expenses = totals[1];
-                double balance = income - expenses;
+                welcomeLabel.setText("Welcome back, " + user.getUsername() + "!");
+
+                // Stats
+                List<Transaction> allTrans = user.getTransactions();
+                double[] totals = FinanceManager.calculateTotals(allTrans);
+                double balance = totals[0] - totals[1];
+
+                YearMonth now = YearMonth.now();
+                List<Transaction> monthTrans = MonthlyReportManager.getTransactionsForMonth(allTrans, now);
+                double monthInc = FinanceManager.calculateTotalIncome(monthTrans);
+                double monthExp = FinanceManager.calculateTotalExpenses(monthTrans);
+                double net = monthInc - monthExp;
 
                 balanceCard.setValue(FinanceManager.formatCurrency(balance));
-                incomeCard.setValue(FinanceManager.formatCurrency(income));
-                expensesCard.setValue(FinanceManager.formatCurrency(expenses));
+                incomeCard.setValue(FinanceManager.formatCurrency(monthInc));
+                expensesCard.setValue(FinanceManager.formatCurrency(monthExp));
+                savingsCard.setValue(FinanceManager.formatCurrency(net));
+                savingsCard.setValueColor(net < 0 ? Theme.DANGER : Theme.TEXT_PRIMARY);
 
-                double monthlyBudget = user.getMonthlyBudget();
-                if (monthlyBudget > 0) {
-                    double monthlyExpenses = FinanceManager.calculateMonthlyExpenses(transactions);
-                    double percentage = (monthlyExpenses / monthlyBudget) * 100;
+                // Budget
+                double budget = user.getMonthlyBudget();
+                if (budget > 0) {
+                    double pct = (monthExp / budget) * 100;
+                    budgetProgress.setValue((int) Math.min(pct, 100));
+                    budgetStatus.setText(pct >= 100 ? "Over Budget!"
+                            : "Remaining: " + FinanceManager.formatCurrency(budget - monthExp));
+                    budgetStatus.setForeground(pct >= 100 ? Theme.DANGER : Theme.TEXT_SECONDARY);
+                    budgetProgress.setForeground(pct >= 100 ? Theme.DANGER : Theme.PRIMARY);
+                } else {
+                    budgetProgress.setValue(0);
+                    budgetStatus.setText("Set a budget to track progress");
+                }
 
-                    budgetProgressBar.setValue((int) Math.min(percentage, 100));
-                    budgetProgressBar.setString(String.format("%.1f%%", percentage));
+                // Savings
+                double goal = user.getSavingsGoal();
+                if (goal > 0) {
+                    double pct = (balance / goal) * 100;
+                    savingsProgress.setValue(balance > 0 ? (int) Math.min(pct, 100) : 0);
+                    savingsStatus.setText(pct >= 100 ? "Goal Reached!"
+                            : "Remaining: " + FinanceManager.formatCurrency(goal - balance));
+                    savingsProgress.setForeground(Theme.INFO);
+                } else {
+                    savingsProgress.setValue(0);
+                    savingsStatus.setText("Set a goal to track progress");
+                }
 
-                    if (percentage >= 100) {
-                        budgetCard.setValue("Over Budget");
-                        panel.setSubtitle("⚠️ OVER BUDGET");
-                    } else if (percentage >= 90) {
-                        budgetCard.setValue("Critical (90%+)");
-                        panel.setSubtitle("⚠️ Warning: 90% of budget used");
-                    } else if (percentage >= 75) {
-                        budgetCard.setValue("Caution (75%+)");
-                        panel.setSubtitle("⚠️ Caution: 75% of budget used");
-                    } else {
-                        budgetCard.setValue("Within Budget");
-                        panel.setSubtitle("");
+                // Transactions
+                transList.removeAll();
+                List<Transaction> recent = allTrans.stream()
+                        .sorted(Comparator.comparing(Transaction::getDate).reversed())
+                        .limit(5)
+                        .collect(Collectors.toList());
+
+                if (recent.isEmpty()) {
+                    JLabel empty = new JLabel("No recent transactions");
+                    empty.setFont(Theme.FONT_BODY);
+                    empty.setForeground(Theme.TEXT_SECONDARY);
+                    empty.setAlignmentX(Component.CENTER_ALIGNMENT);
+                    transList.add(Box.createVerticalStrut(30));
+                    transList.add(empty);
+                } else {
+                    for (Transaction t : recent) {
+                        transList.add(createTransactionItem(t));
+                        transList.add(Box.createVerticalStrut(8));
                     }
-                } else {
-                    budgetProgressBar.setValue(0);
-                    budgetProgressBar.setString("Not Set");
-                    budgetCard.setValue("Not Set");
-                    panel.setSubtitle("");
                 }
-
-                double savingsGoal = user.getSavingsGoal();
-                if (savingsGoal > 0) {
-                    double progress = FinanceManager.calculateSavingsProgress(transactions, savingsGoal);
-                    savingsProgressBar.setValue((int) Math.min(progress, 100));
-                    savingsProgressBar.setString(String.format("%.1f%%", progress));
-                    savingsCard.setValue(FinanceManager.formatCurrency(savingsGoal));
-                } else {
-                    savingsProgressBar.setValue(0);
-                    savingsProgressBar.setString("Not Set");
-                    savingsCard.setValue("Not Set");
-                }
+                transList.revalidate();
+                transList.repaint();
             }
         };
     }
 
-    public static RefreshablePanel createBudgetSavingsPanel(GUIController gui) {
-        JPanel mainPanel = new JPanel(new BorderLayout());
-        mainPanel.setBackground(Color.WHITE);
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+    // Helper to create list items
+    private static JPanel createTransactionItem(Transaction t) {
+        RoundedPanel item = new RoundedPanel(Theme.RADIUS_SMALL, Theme.BACKGROUND);
+        item.setLayout(new BorderLayout(15, 0));
+        item.setBorder(new EmptyBorder(10, 15, 10, 15));
+        item.setMaximumSize(new Dimension(Integer.MAX_VALUE, 55));
 
-        // Budget Section
-        JPanel budgetSection = new JPanel(new BorderLayout());
-        budgetSection.setBorder(BorderFactory.createTitledBorder("Monthly Budget"));
-        budgetSection.setBackground(Color.WHITE);
+        JLabel icon = new JLabel(t instanceof Income ? "💰" : "💸");
+        icon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 18));
+
+        JPanel center = new JPanel(new GridLayout(2, 1));
+        center.setOpaque(false);
+        JLabel name = new JLabel(t.getName());
+        name.setFont(Theme.FONT_BODY);
+        name.setForeground(Theme.TEXT_PRIMARY);
+        JLabel date = new JLabel(t.getDate().format(DateTimeFormatter.ofPattern("MMM d")));
+        date.setFont(Theme.FONT_SMALL);
+        date.setForeground(Theme.TEXT_SECONDARY);
+        center.add(name);
+        center.add(date);
+
+        JLabel amt = new JLabel(FinanceManager.formatCurrency(t.getAmount()));
+        amt.setFont(Theme.FONT_BUTTON);
+        amt.setForeground(t instanceof Income ? Theme.SUCCESS : Theme.TEXT_PRIMARY);
+
+        item.add(icon, BorderLayout.WEST);
+        item.add(center, BorderLayout.CENTER);
+        item.add(amt, BorderLayout.EAST);
+
+        return item;
+    }
+
+    public static RefreshablePanel createBudgetSavingsPanel(GUIController gui) {
+        JPanel main = new JPanel(new BorderLayout());
+        main.setBackground(Theme.BACKGROUND);
+        main.setBorder(
+                new EmptyBorder(Theme.PADDING_LARGE, Theme.PADDING_LARGE, Theme.PADDING_LARGE, Theme.PADDING_LARGE));
+
+        // 1. Budget Card
+        RoundedPanel budgetCard = new RoundedPanel(Theme.RADIUS_MEDIUM, null);
+        budgetCard.setBackground(Theme.SURFACE); // Explicitly set background
+        budgetCard.setLayout(new BorderLayout());
+        budgetCard.setBorder(new EmptyBorder(25, 25, 25, 25));
+
+        JLabel budgetTitle = new JLabel("Monthly Budget");
+        budgetTitle.setFont(Theme.FONT_HEADING);
+        budgetTitle.setForeground(Theme.TEXT_PRIMARY);
 
         FormPanel budgetForm = new FormPanel(null);
-        List<FormField> budgetFields = new ArrayList<>();
-        budgetFields.add(new FormField("budget", "Monthly Budget ($):", FormField.FieldType.NUMBER));
-        budgetForm.addFields(budgetFields);
-
-        JLabel budgetStatusLabel = new JLabel("");
-        budgetStatusLabel.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
-        JProgressBar budgetProgressBar = new JProgressBar(0, 100);
-        budgetProgressBar.setStringPainted(true);
-        budgetProgressBar.setString("Not Set");
-
-        JPanel budgetStatusPanel = new JPanel(new BorderLayout());
-        budgetStatusPanel.setBackground(Color.WHITE);
-        budgetStatusPanel.add(budgetStatusLabel, BorderLayout.NORTH);
-        budgetStatusPanel.add(budgetProgressBar, BorderLayout.CENTER);
-
+        budgetForm.addFields(java.util.List.of(new FormField("budget", "Budget ($):", FormField.FieldType.NUMBER)));
         budgetForm.addButton("Save Budget", e -> {
-            String budgetStr = budgetForm.getFieldValue("budget");
-            if (budgetStr.isEmpty()) {
-                gui.showError("Please enter a budget amount.", "Validation Error");
-                return;
-            }
-
             try {
-                double budget = Double.parseDouble(budgetStr);
-                if (budget < 0) {
-                    gui.showError("Budget cannot be negative.", "Validation Error");
+                double val = Double.parseDouble(budgetForm.getFieldValue("budget"));
+                if (val < 0) {
+                    gui.showError("Positive values only", "Error");
                     return;
                 }
-
-                User user = gui.getCurrentUser();
-                if (user != null) {
-                    user.setMonthlyBudget(budget);
-                    gui.showMessage("Budget saved successfully!", "Success");
+                User u = gui.getCurrentUser();
+                if (u != null) {
+                    u.setMonthlyBudget(val);
                     gui.refreshAllPanels();
+                    gui.showMessage("Saved", "Success");
                 }
-            } catch (NumberFormatException ex) {
-                gui.showError("Invalid budget amount.", "Validation Error");
+            } catch (Exception ex) {
+                gui.showError("Invalid number", "Error");
             }
         });
 
-        JPanel budgetContent = new JPanel(new BorderLayout());
-        budgetContent.setBackground(Color.WHITE);
-        budgetContent.add(budgetForm, BorderLayout.NORTH);
-        budgetContent.add(budgetStatusPanel, BorderLayout.CENTER);
+        JProgressBar bBar = new JProgressBar(0, 100);
+        bBar.setStringPainted(true);
+        JLabel bStatus = new JLabel(" ");
+        bStatus.setFont(Theme.FONT_SMALL);
+        bStatus.setForeground(Theme.TEXT_SECONDARY);
 
-        budgetSection.add(budgetContent, BorderLayout.CENTER);
+        JPanel bBottom = new JPanel(new BorderLayout());
+        bBottom.setOpaque(false);
+        bBottom.add(bStatus, BorderLayout.NORTH);
+        bBottom.add(bBar, BorderLayout.CENTER);
 
-        JPanel budgetButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        budgetButtonPanel.setBackground(Color.WHITE);
-        JButton backButton = new JButton("Back to Dashboard");
-        backButton.addActionListener(e -> gui.showDashboard());
-        budgetButtonPanel.add(backButton);
-        budgetSection.add(budgetButtonPanel, BorderLayout.SOUTH);
+        budgetCard.add(budgetTitle, BorderLayout.NORTH);
+        budgetCard.add(budgetForm, BorderLayout.CENTER);
+        budgetCard.add(bBottom, BorderLayout.SOUTH);
 
-        // Savings Section
-        JPanel savingsSection = new JPanel(new BorderLayout());
-        savingsSection.setBorder(BorderFactory.createTitledBorder("Savings Goal"));
-        savingsSection.setBackground(Color.WHITE);
+        // 2. Savings Card
+        RoundedPanel savingsCard = new RoundedPanel(Theme.RADIUS_MEDIUM, null);
+        savingsCard.setBackground(Theme.SURFACE); // Explicitly set background
+        savingsCard.setLayout(new BorderLayout());
+        savingsCard.setBorder(new EmptyBorder(25, 25, 25, 25));
+
+        JLabel savingsTitle = new JLabel("Savings Goal");
+        savingsTitle.setFont(Theme.FONT_HEADING);
+        savingsTitle.setForeground(Theme.TEXT_PRIMARY);
 
         FormPanel savingsForm = new FormPanel(null);
-        List<FormField> savingsFields = new ArrayList<>();
-        savingsFields.add(new FormField("savingsGoal", "Savings Goal ($):", FormField.FieldType.NUMBER));
-        savingsFields.add(new FormField("targetDate", "Target Date (YYYY-MM-DD):", FormField.FieldType.DATE, "", false,
-                "Leave empty to use months instead", 20));
-        savingsFields.add(new FormField("targetMonths", "Target Months:", FormField.FieldType.NUMBER, "", false,
-                "Leave empty to use date instead", 20));
-        savingsForm.addFields(savingsFields);
-
-        JLabel savingsStatusLabel = new JLabel("");
-        savingsStatusLabel.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
-        JProgressBar savingsProgressBar = new JProgressBar(0, 100);
-        savingsProgressBar.setStringPainted(true);
-        savingsProgressBar.setString("Not Set");
-
-        JPanel savingsStatusPanel = new JPanel(new BorderLayout());
-        savingsStatusPanel.setBackground(Color.WHITE);
-        savingsStatusPanel.add(savingsStatusLabel, BorderLayout.NORTH);
-        savingsStatusPanel.add(savingsProgressBar, BorderLayout.CENTER);
-
+        savingsForm.addFields(java.util.List.of(
+                new FormField("goal", "Goal ($):", FormField.FieldType.NUMBER),
+                new FormField("date", "Target Date (YYYY-MM-DD):", FormField.FieldType.DATE, "", false, "Optional",
+                        20)));
         savingsForm.addButton("Save Goal", e -> {
-            String goalStr = savingsForm.getFieldValue("savingsGoal");
-            if (goalStr.isEmpty()) {
-                gui.showError("Please enter a savings goal amount.", "Validation Error");
-                return;
-            }
-
             try {
-                double goal = Double.parseDouble(goalStr);
-                if (goal < 0) {
-                    gui.showError("Savings goal cannot be negative.", "Validation Error");
+                double val = Double.parseDouble(savingsForm.getFieldValue("goal"));
+                String dStr = savingsForm.getFieldValue("date");
+                if (val < 0) {
+                    gui.showError("Positive values only", "Error");
                     return;
                 }
-
-                User user = gui.getCurrentUser();
-                if (user == null)
-                    return;
-
-                user.setSavingsGoal(goal);
-
-                String dateStr = savingsForm.getFieldValue("targetDate");
-                String monthsStr = savingsForm.getFieldValue("targetMonths");
-
-                if (!dateStr.isEmpty()) {
-                    try {
-                        LocalDate targetDate = LocalDate.parse(dateStr);
-                        user.setSavingsTargetDate(targetDate);
-                        user.setSavingsTargetMonths(0);
-                    } catch (DateTimeParseException ex) {
-                        gui.showError("Invalid date format. Use YYYY-MM-DD.", "Validation Error");
-                        return;
-                    }
-                } else if (!monthsStr.isEmpty()) {
-                    try {
-                        int months = Integer.parseInt(monthsStr);
-                        if (months <= 0) {
-                            gui.showError("Target months must be positive.", "Validation Error");
-                            return;
-                        }
-                        user.setSavingsTargetMonths(months);
-                        user.setSavingsTargetDate(null);
-                    } catch (NumberFormatException ex) {
-                        gui.showError("Invalid number of months.", "Validation Error");
-                        return;
-                    }
-                } else {
-                    user.setSavingsTargetDate(null);
-                    user.setSavingsTargetMonths(0);
+                User u = gui.getCurrentUser();
+                if (u != null) {
+                    u.setSavingsGoal(val);
+                    if (!dStr.isEmpty())
+                        u.setSavingsTargetDate(LocalDate.parse(dStr));
+                    else
+                        u.setSavingsTargetDate(null);
+                    gui.refreshAllPanels();
+                    gui.showMessage("Saved", "Success");
                 }
-
-                gui.showMessage("Savings goal saved successfully!", "Success");
-                gui.refreshAllPanels();
-            } catch (NumberFormatException ex) {
-                gui.showError("Invalid savings goal amount.", "Validation Error");
+            } catch (Exception ex) {
+                gui.showError("Invalid input", "Error");
             }
         });
 
-        JPanel savingsContent = new JPanel(new BorderLayout());
-        savingsContent.setBackground(Color.WHITE);
-        savingsContent.add(savingsForm, BorderLayout.NORTH);
-        savingsContent.add(savingsStatusPanel, BorderLayout.CENTER);
+        JProgressBar sBar = new JProgressBar(0, 100);
+        sBar.setStringPainted(true);
+        JLabel sStatus = new JLabel(" ");
+        sStatus.setFont(Theme.FONT_SMALL);
+        sStatus.setForeground(Theme.TEXT_SECONDARY);
 
-        savingsSection.add(savingsContent, BorderLayout.CENTER);
+        JPanel sBottom = new JPanel(new BorderLayout());
+        sBottom.setOpaque(false);
+        sBottom.add(sStatus, BorderLayout.NORTH);
+        sBottom.add(sBar, BorderLayout.CENTER);
 
-        mainPanel.add(budgetSection, BorderLayout.NORTH);
-        mainPanel.add(savingsSection, BorderLayout.CENTER);
+        savingsCard.add(savingsTitle, BorderLayout.NORTH);
+        savingsCard.add(savingsForm, BorderLayout.CENTER);
+        savingsCard.add(sBottom, BorderLayout.SOUTH);
 
-        return new RefreshablePanel(mainPanel) {
+        // Layout Config
+        JPanel content = new JPanel(new GridLayout(2, 1, 0, 20));
+        content.setOpaque(false);
+        content.add(budgetCard);
+        content.add(savingsCard);
+
+        JButton back = Theme.createButton("Back", false);
+        back.addActionListener(e -> gui.showDashboard());
+        JPanel footer = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        footer.setBackground(Theme.BACKGROUND);
+        footer.add(back);
+
+        main.add(content, BorderLayout.CENTER);
+        main.add(footer, BorderLayout.SOUTH);
+
+        return new RefreshablePanel(main) {
             @Override
             public void refresh() {
-                User user = gui.getCurrentUser();
-                if (user == null)
+                User u = gui.getCurrentUser();
+                if (u == null)
                     return;
 
-                // Update budget
-                double monthlyBudget = user.getMonthlyBudget();
-                if (monthlyBudget > 0) {
-                    budgetForm.setFieldValue("budget", String.format("%.2f", monthlyBudget));
-
-                    List<Transaction> transactions = user.getTransactions();
-                    double monthlyExpenses = FinanceManager.calculateMonthlyExpenses(transactions);
-                    double percentage = (monthlyBudget > 0) ? (monthlyExpenses / monthlyBudget) * 100 : 0;
-
-                    budgetProgressBar.setValue((int) Math.min(percentage, 100));
-                    budgetProgressBar.setString(String.format("%.1f%%", percentage));
-
-                    if (percentage >= 100) {
-                        budgetStatusLabel.setText("⚠️ OVER BUDGET - Over by "
-                                + FinanceManager.formatCurrency(monthlyExpenses - monthlyBudget));
-                    } else if (percentage >= 90) {
-                        budgetStatusLabel.setText("⚠️ WARNING: 90% of budget used - "
-                                + FinanceManager.formatCurrency(monthlyBudget - monthlyExpenses) + " remaining");
-                    } else if (percentage >= 75) {
-                        budgetStatusLabel.setText("⚠️ CAUTION: 75% of budget used - "
-                                + FinanceManager.formatCurrency(monthlyBudget - monthlyExpenses) + " remaining");
-                    } else {
-                        budgetStatusLabel.setText("Within Budget - "
-                                + FinanceManager.formatCurrency(monthlyBudget - monthlyExpenses) + " remaining");
-                    }
+                // Budget populate
+                double b = u.getMonthlyBudget();
+                budgetForm.setFieldValue("budget", b > 0 ? String.format("%.2f", b) : "");
+                if (b > 0) {
+                    double exp = FinanceManager.calculateMonthlyExpenses(u.getTransactions());
+                    double pct = (exp / b) * 100;
+                    bBar.setValue((int) Math.min(pct, 100));
+                    bBar.setString(String.format("%.1f%%", pct));
+                    bBar.setForeground(pct >= 100 ? Theme.DANGER : Theme.PRIMARY);
+                    bStatus.setText(
+                            pct >= 100 ? "Over Budget" : "Remaining: " + FinanceManager.formatCurrency(b - exp));
                 } else {
-                    budgetForm.setFieldValue("budget", "");
-                    budgetProgressBar.setValue(0);
-                    budgetProgressBar.setString("Not Set");
-                    budgetStatusLabel.setText("");
+                    bBar.setValue(0);
+                    bBar.setString("Not Set");
                 }
 
-                // Update savings
-                double savingsGoal = user.getSavingsGoal();
-                if (savingsGoal > 0) {
-                    savingsForm.setFieldValue("savingsGoal", String.format("%.2f", savingsGoal));
+                // Savings populate
+                double g = u.getSavingsGoal();
+                savingsForm.setFieldValue("goal", g > 0 ? String.format("%.2f", g) : "");
+                LocalDate td = u.getSavingsTargetDate();
+                savingsForm.setFieldValue("date", td != null ? td.toString() : "");
 
-                    LocalDate targetDate = user.getSavingsTargetDate();
-                    if (targetDate != null) {
-                        savingsForm.setFieldValue("targetDate", targetDate.toString());
-                        savingsForm.setFieldValue("targetMonths", "");
-                    } else {
-                        savingsForm.setFieldValue("targetDate", "");
-                        int targetMonths = user.getSavingsTargetMonths();
-                        if (targetMonths > 0) {
-                            savingsForm.setFieldValue("targetMonths", String.valueOf(targetMonths));
-                        } else {
-                            savingsForm.setFieldValue("targetMonths", "");
-                        }
-                    }
-
-                    List<Transaction> transactions = user.getTransactions();
-                    double progress = FinanceManager.calculateSavingsProgress(transactions, savingsGoal);
-                    double balance = FinanceManager.calculateBalance(transactions);
-
-                    savingsProgressBar.setValue((int) Math.min(progress, 100));
-                    savingsProgressBar.setString(String.format("%.1f%%", progress));
-
-                    if (targetDate != null) {
-                        double requiredMonthly = SavingsPlanner.calculateRequiredMonthlySavings(savingsGoal,
-                                targetDate);
-                        boolean onTrack = SavingsPlanner.isOnTrack(transactions, savingsGoal, targetDate, 0);
-                        savingsStatusLabel.setText("Target Date: " + targetDate.toString() + " | Required Monthly: " +
-                                FinanceManager.formatCurrency(requiredMonthly) + " | Status: "
-                                + (onTrack ? "On Track ✓" : "Behind ✗"));
-                    } else {
-                        int targetMonths = user.getSavingsTargetMonths();
-                        if (targetMonths > 0) {
-                            double requiredMonthly = SavingsPlanner.calculateRequiredMonthlySavings(savingsGoal,
-                                    targetMonths);
-                            boolean onTrack = SavingsPlanner.isOnTrack(transactions, savingsGoal, null, targetMonths);
-                            savingsStatusLabel.setText("Target Months: " + targetMonths + " | Required Monthly: " +
-                                    FinanceManager.formatCurrency(requiredMonthly) + " | Status: "
-                                    + (onTrack ? "On Track ✓" : "Behind ✗"));
-                        } else {
-                            savingsStatusLabel.setText("Current Balance: " + FinanceManager.formatCurrency(balance) +
-                                    " | Remaining: " + FinanceManager.formatCurrency(
-                                            FinanceManager.getRemainingForGoal(transactions, savingsGoal)));
-                        }
-                    }
+                if (g > 0) {
+                    double bal = FinanceManager.calculateBalance(u.getTransactions());
+                    double pct = (bal / g) * 100;
+                    sBar.setValue(bal > 0 ? (int) Math.min(pct, 100) : 0);
+                    sBar.setString(String.format("%.1f%%", Math.max(0, pct)));
+                    sBar.setForeground(Theme.INFO);
+                    sStatus.setText("Current: " + FinanceManager.formatCurrency(bal));
                 } else {
-                    savingsForm.setFieldValue("savingsGoal", "");
-                    savingsForm.setFieldValue("targetDate", "");
-                    savingsForm.setFieldValue("targetMonths", "");
-                    savingsProgressBar.setValue(0);
-                    savingsProgressBar.setString("Not Set");
-                    savingsStatusLabel.setText("");
+                    sBar.setValue(0);
+                    sBar.setString("Not set");
                 }
             }
         };
     }
 
     public static RefreshablePanel createTransactionHistoryPanel(GUIController gui) {
-        JPanel mainPanel = new JPanel(new BorderLayout());
-        mainPanel.setBackground(Color.WHITE);
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        JPanel mainConfig = new JPanel(new BorderLayout());
+        mainConfig.setBackground(Theme.BACKGROUND);
 
-        String[] columns = { "Date", "Type", "Name", "Amount", "Category/Source" };
-        TablePanel tablePanel = new TablePanel(columns, false);
+        // Header
+        JPanel header = new JPanel(new BorderLayout());
+        header.setBackground(Theme.BACKGROUND);
+        header.setBorder(
+                new EmptyBorder(Theme.PADDING_LARGE, Theme.PADDING_LARGE, Theme.PADDING_SMALL, Theme.PADDING_LARGE));
 
-        tablePanel.addActionButton("Edit", e -> {
-            int selectedRow = tablePanel.getSelectedRow();
-            if (selectedRow == -1) {
-                gui.showError("Please select a transaction to edit.", "No Selection");
-                return;
-            }
+        JLabel title = new JLabel("Transaction History");
+        title.setFont(Theme.FONT_TITLE);
+        title.setForeground(Theme.TEXT_PRIMARY);
 
-            User user = gui.getCurrentUser();
-            if (user == null)
-                return;
+        JButton backBtn = Theme.createButton("Back to Dashboard", false); // Secondary button
+        backBtn.addActionListener(e -> gui.showDashboard());
 
-            List<Transaction> transactions = user.getTransactions();
-            List<Transaction> sortedTransactions = transactions.stream()
-                    .sorted(Comparator.comparing(Transaction::getDate).reversed())
-                    .collect(Collectors.toList());
+        header.add(title, BorderLayout.WEST);
+        header.add(backBtn, BorderLayout.EAST);
+        mainConfig.add(header, BorderLayout.NORTH);
 
-            if (selectedRow >= sortedTransactions.size())
-                return;
+        // Content List
+        JPanel listPanel = new JPanel();
+        listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
+        listPanel.setOpaque(false);
+        listPanel.setBorder(new EmptyBorder(0, Theme.PADDING_LARGE, Theme.PADDING_LARGE, Theme.PADDING_LARGE));
 
-            Transaction transaction = sortedTransactions.get(selectedRow);
-            showEditDialog(gui, transaction, transactions.indexOf(transaction), mainPanel);
-        });
+        JScrollPane scrollPane = new JScrollPane(listPanel);
+        scrollPane.setBorder(null);
+        scrollPane.setOpaque(false);
+        scrollPane.getViewport().setOpaque(false);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
-        tablePanel.addActionButton("Delete", e -> {
-            int selectedRow = tablePanel.getSelectedRow();
-            if (selectedRow == -1) {
-                gui.showError("Please select a transaction to delete.", "No Selection");
-                return;
-            }
+        mainConfig.add(scrollPane, BorderLayout.CENTER);
 
-            User user = gui.getCurrentUser();
-            if (user == null)
-                return;
-
-            int confirm = JOptionPane.showConfirmDialog(
-                    mainPanel,
-                    "Are you sure you want to delete this transaction?",
-                    "Confirm Delete",
-                    JOptionPane.YES_NO_OPTION);
-
-            if (confirm == JOptionPane.YES_OPTION) {
-                List<Transaction> transactions = user.getTransactions();
-                List<Transaction> sortedTransactions = transactions.stream()
-                        .sorted(Comparator.comparing(Transaction::getDate).reversed())
-                        .collect(Collectors.toList());
-
-                if (selectedRow >= sortedTransactions.size())
-                    return;
-
-                Transaction transaction = sortedTransactions.get(selectedRow);
-                user.removeTransaction(transaction);
-                gui.refreshAllPanels();
-                gui.showMessage("Transaction deleted successfully!", "Success");
-            }
-        });
-
-        tablePanel.addActionButton("Sort by Date", e -> gui.refreshAllPanels());
-        tablePanel.addActionButton("Sort by Amount", e -> gui.refreshAllPanels());
-        tablePanel.addActionButton("Back to Dashboard", e -> gui.showDashboard());
-
-        mainPanel.add(tablePanel, BorderLayout.CENTER);
-
-        return new RefreshablePanel(mainPanel) {
+        return new RefreshablePanel(mainConfig) {
             @Override
             public void refresh() {
+                listPanel.removeAll();
                 User user = gui.getCurrentUser();
                 if (user == null)
                     return;
 
-                List<Transaction> transactions = user.getTransactions();
-                List<Transaction> sortedTransactions = transactions.stream()
+                List<Transaction> transactions = user.getTransactions().stream()
                         .sorted(Comparator.comparing(Transaction::getDate).reversed())
                         .collect(Collectors.toList());
 
-                tablePanel.clearRows();
-
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                for (Transaction t : sortedTransactions) {
-                    String type = (t instanceof Income) ? "Income" : "Expense";
-                    String categorySource = (t instanceof Income) ? ((Income) t).getSource()
-                            : ((Expense) t).getCategory();
-
-                    Object[] row = {
-                            t.getDate().format(formatter),
-                            type,
-                            t.getName(),
-                            FinanceManager.formatCurrency(t.getAmount()),
-                            categorySource
-                    };
-                    tablePanel.addRow(row);
+                if (transactions.isEmpty()) {
+                    JLabel empty = new JLabel("No transactions found.");
+                    empty.setFont(Theme.FONT_HEADING);
+                    empty.setForeground(Theme.TEXT_SECONDARY);
+                    empty.setAlignmentX(Component.CENTER_ALIGNMENT);
+                    listPanel.add(Box.createVerticalStrut(50));
+                    listPanel.add(empty);
+                } else {
+                    for (Transaction t : transactions) {
+                        listPanel.add(createFullTransactionItem(t, gui, () -> {
+                            // On delete callback
+                            user.removeTransaction(t);
+                            gui.refreshAllPanels();
+                        }));
+                        listPanel.add(Box.createVerticalStrut(10));
+                    }
                 }
+                listPanel.revalidate();
+                listPanel.repaint();
             }
         };
     }
 
-    private static void showEditDialog(GUIController gui, Transaction transaction, int index, JPanel parent) {
-        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(parent), "Edit Transaction", true);
-        dialog.setLayout(new BorderLayout());
-        dialog.setSize(400, 300);
-        dialog.setLocationRelativeTo(parent);
+    // Helper for full width transaction item with actions
+    private static JPanel createFullTransactionItem(Transaction t, GUIController gui, Runnable onDelete) {
+        RoundedPanel item = new RoundedPanel(Theme.RADIUS_SMALL, null);
+        item.setBackground(Theme.SURFACE);
+        item.setLayout(new BorderLayout(15, 0));
+        item.setBorder(new EmptyBorder(15, 20, 15, 20));
+        item.setMaximumSize(new Dimension(Integer.MAX_VALUE, 70));
 
-        FormPanel editForm = new FormPanel(null);
-        List<FormField> fields = new ArrayList<>();
-        fields.add(new FormField("name", "Name:", FormField.FieldType.TEXT, transaction.getName()));
-        fields.add(new FormField("amount", "Amount:", FormField.FieldType.NUMBER,
-                String.valueOf(transaction.getAmount())));
+        // Left: Icon + Type
+        JLabel icon = new JLabel(t instanceof Income ? "💰" : "💸");
+        icon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 24));
 
-        boolean isIncome = transaction instanceof Income;
-        String categorySource = isIncome ? ((Income) transaction).getSource() : ((Expense) transaction).getCategory();
-        fields.add(new FormField("categorySource", isIncome ? "Source:" : "Category:", FormField.FieldType.TEXT,
-                categorySource));
-        fields.add(new FormField("date", "Date (YYYY-MM-DD):", FormField.FieldType.DATE,
-                transaction.getDate().toString()));
+        JPanel left = new JPanel(new GridLayout(2, 1));
+        left.setOpaque(false);
+        JLabel name = new JLabel(t.getName());
+        name.setFont(Theme.FONT_HEADING);
+        name.setForeground(Theme.TEXT_PRIMARY);
+        JLabel type = new JLabel(t instanceof Income ? "Income" : "Expense");
+        type.setFont(Theme.FONT_SMALL);
+        type.setForeground(Theme.TEXT_SECONDARY);
+        left.add(name);
+        left.add(type);
 
-        editForm.addFields(fields);
+        JPanel farLeft = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        farLeft.setOpaque(false);
+        farLeft.add(icon);
+        farLeft.add(left);
 
-        editForm.addButton("Save", e -> {
-            String name = editForm.getFieldValue("name");
-            String amountStr = editForm.getFieldValue("amount");
-            String catSrc = editForm.getFieldValue("categorySource");
-            String dateStr = editForm.getFieldValue("date");
+        // Center: Date + Category
+        JPanel center = new JPanel(new GridLayout(2, 1));
+        center.setOpaque(false);
+        JLabel date = new JLabel("Date: " + t.getDate().toString());
+        date.setFont(Theme.FONT_BODY);
+        date.setForeground(Theme.TEXT_PRIMARY);
+        String catSrc = t instanceof Income ? ((Income) t).getSource() : ((Expense) t).getCategory();
+        JLabel category = new JLabel(t instanceof Income ? "Source: " + catSrc : "Category: " + catSrc);
+        category.setFont(Theme.FONT_SMALL);
+        category.setForeground(Theme.TEXT_SECONDARY);
+        center.add(date);
+        center.add(category);
 
-            if (name.isEmpty() || amountStr.isEmpty() || catSrc.isEmpty() || dateStr.isEmpty()) {
-                gui.showError("Please fill in all fields.", "Validation Error");
-                return;
-            }
+        // Right: Amount + Delete
+        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 0));
+        right.setOpaque(false);
 
-            try {
-                double amount = Double.parseDouble(amountStr);
-                LocalDate date = LocalDate.parse(dateStr);
+        JLabel amount = new JLabel(FinanceManager.formatCurrency(t.getAmount()));
+        amount.setFont(Theme.FONT_HEADING);
+        amount.setForeground(t instanceof Income ? Theme.SUCCESS : Theme.TEXT_PRIMARY);
 
-                if (amount <= 0) {
-                    gui.showError("Amount must be positive.", "Validation Error");
-                    return;
-                }
-
-                User user = gui.getCurrentUser();
-                if (user == null)
-                    return;
-
-                Transaction newTransaction;
-                if (isIncome) {
-                    newTransaction = new Income(name, amount, catSrc, date);
-                } else {
-                    newTransaction = new Expense(name, amount, catSrc, date);
-                }
-
-                user.getTransactions().set(index, newTransaction);
-                gui.refreshAllPanels();
-                gui.showMessage("Transaction updated successfully!", "Success");
-                dialog.dispose();
-            } catch (Exception ex) {
-                gui.showError("Invalid input: " + ex.getMessage(), "Validation Error");
+        JButton deleteBtn = new JButton("🗑️");
+        deleteBtn.setBorderPainted(false);
+        deleteBtn.setContentAreaFilled(false);
+        deleteBtn.setFocusPainted(false);
+        deleteBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        deleteBtn.addActionListener(e -> {
+            if (JOptionPane.showConfirmDialog(item, "Delete this transaction?", "Confirm Delete",
+                    JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+                onDelete.run();
             }
         });
 
-        editForm.addButton("Cancel", e -> dialog.dispose());
+        right.add(amount);
+        right.add(deleteBtn);
 
-        dialog.add(editForm, BorderLayout.CENTER);
-        dialog.setVisible(true);
+        item.add(farLeft, BorderLayout.WEST);
+        item.add(center, BorderLayout.CENTER);
+        item.add(right, BorderLayout.EAST);
+
+        return item;
     }
 
     public static RefreshablePanel createReportsPanel(GUIController gui) {
-        JPanel mainPanel = new JPanel(new BorderLayout());
-        mainPanel.setBackground(Color.WHITE);
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        JPanel main = new JPanel(new BorderLayout());
+        main.setBackground(Theme.BACKGROUND);
 
-        // Monthly Report Section
-        JPanel monthlyPanel = new JPanel(new BorderLayout());
-        monthlyPanel.setBorder(BorderFactory.createTitledBorder("Monthly Report"));
-        monthlyPanel.setBackground(Color.WHITE);
+        // Header
+        JPanel header = new JPanel(new BorderLayout());
+        header.setBorder(
+                new EmptyBorder(Theme.PADDING_LARGE, Theme.PADDING_LARGE, Theme.PADDING_SMALL, Theme.PADDING_LARGE));
+        header.setBackground(Theme.BACKGROUND);
 
-        JPanel monthSelectionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        monthSelectionPanel.setBackground(Color.WHITE);
-        monthSelectionPanel.add(new JLabel("Select Month:"));
+        JLabel title = new JLabel("Financial Reports");
+        title.setFont(Theme.FONT_TITLE);
+        title.setForeground(Theme.TEXT_PRIMARY);
 
-        JComboBox<String> monthComboBox = new JComboBox<>();
-        monthComboBox.addItem("Current Month");
-        monthSelectionPanel.add(monthComboBox);
+        JButton backBtn = Theme.createButton("Back to Dashboard", false);
+        backBtn.addActionListener(e -> gui.showDashboard());
 
-        monthlyPanel.add(monthSelectionPanel, BorderLayout.NORTH);
+        header.add(title, BorderLayout.WEST);
+        header.add(backBtn, BorderLayout.EAST);
+        main.add(header, BorderLayout.NORTH);
 
-        String[] monthlyColumns = { "Income", "Expenses", "Net Balance", "Transactions" };
-        TablePanel monthlyTable = new TablePanel(monthlyColumns, false);
-        monthlyPanel.add(monthlyTable, BorderLayout.CENTER);
+        // Scrollable Content
+        JPanel content = new JPanel();
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+        content.setBorder(new EmptyBorder(0, Theme.PADDING_LARGE, Theme.PADDING_LARGE, Theme.PADDING_LARGE));
+        content.setBackground(Theme.BACKGROUND);
 
-        // Category Breakdown Section
-        JPanel categoryPanel = new JPanel(new BorderLayout());
-        categoryPanel.setBorder(BorderFactory.createTitledBorder("Category Spending Breakdown"));
-        categoryPanel.setBackground(Color.WHITE);
+        JScrollPane scroll = new JScrollPane(content);
+        scroll.setBorder(null);
+        scroll.setOpaque(false);
+        scroll.getViewport().setOpaque(false);
+        scroll.getVerticalScrollBar().setUnitIncrement(16);
+        main.add(scroll, BorderLayout.CENTER);
 
-        String[] categoryColumns = { "Category", "Amount", "Percentage" };
-        TablePanel categoryTable = new TablePanel(categoryColumns, false);
-        categoryPanel.add(categoryTable, BorderLayout.CENTER);
-
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        buttonPanel.setBackground(Color.WHITE);
-        JButton backButton = new JButton("Back to Dashboard");
-        backButton.addActionListener(e -> gui.showDashboard());
-        buttonPanel.add(backButton);
-
-        JButton refreshButton = new JButton("Refresh");
-        monthSelectionPanel.add(refreshButton);
-
-        mainPanel.add(monthlyPanel, BorderLayout.NORTH);
-        mainPanel.add(categoryPanel, BorderLayout.CENTER);
-        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
-
-        RefreshablePanel panel = new RefreshablePanel(mainPanel) {
+        return new RefreshablePanel(main) {
             @Override
             public void refresh() {
+                content.removeAll();
                 User user = gui.getCurrentUser();
                 if (user == null)
                     return;
 
-                // Update month list
-                List<YearMonth> availableMonths = MonthlyReportManager.getAvailableMonths(user.getTransactions());
-                monthComboBox.removeAllItems();
-                monthComboBox.addItem("Current Month");
-                for (YearMonth month : availableMonths) {
-                    monthComboBox.addItem(month.toString());
+                List<Transaction> transactions = user.getTransactions();
+                double income = FinanceManager.calculateTotalIncome(transactions);
+                double expenses = FinanceManager.calculateTotalExpenses(transactions);
+                double savings = income - expenses;
+
+                // 1. Overview Card
+                RoundedPanel overview = new RoundedPanel(Theme.RADIUS_MEDIUM, null);
+                overview.setBackground(Theme.SURFACE);
+                overview.setLayout(new GridLayout(1, 3, 20, 0));
+                overview.setBorder(new EmptyBorder(25, 25, 25, 25));
+                overview.setMaximumSize(new Dimension(Integer.MAX_VALUE, 120));
+
+                overview.add(createReportStat("Total Income", FinanceManager.formatCurrency(income), Theme.SUCCESS));
+                overview.add(createReportStat("Total Expenses", FinanceManager.formatCurrency(expenses), Theme.DANGER));
+                overview.add(createReportStat("Net Savings", FinanceManager.formatCurrency(savings),
+                        savings >= 0 ? Theme.INFO : Theme.DANGER));
+
+                content.add(overview);
+                content.add(Box.createVerticalStrut(30));
+
+                // 2. Category Breakdown
+                JLabel catTitle = new JLabel("Expense Breakdown by Category");
+                catTitle.setFont(Theme.FONT_HEADING);
+                catTitle.setForeground(Theme.TEXT_PRIMARY);
+                catTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+                content.add(catTitle);
+                content.add(Box.createVerticalStrut(15));
+
+                Map<String, Double> categories = CategoryReportManager.getCategoryBreakdown(transactions);
+                if (categories.isEmpty()) {
+                    JLabel empty = new JLabel("No expenses recorded.");
+                    empty.setFont(Theme.FONT_BODY);
+                    empty.setForeground(Theme.TEXT_SECONDARY);
+                    content.add(empty);
+                } else {
+                    // Sort by amount descending
+                    categories.entrySet().stream()
+                            .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
+                            .forEach(entry -> {
+                                double amt = entry.getValue();
+                                double pct = (expenses > 0) ? (amt / expenses) * 100 : 0;
+                                content.add(createCategoryBar(entry.getKey(), amt, pct));
+                                content.add(Box.createVerticalStrut(15));
+                            });
                 }
 
-                // Update monthly report
-                String selected = (String) monthComboBox.getSelectedItem();
-                YearMonth yearMonth = "Current Month".equals(selected) ? YearMonth.now() : YearMonth.parse(selected);
-
-                List<Transaction> monthlyTransactions = MonthlyReportManager
-                        .getTransactionsForMonth(user.getTransactions(), yearMonth);
-                double income = FinanceManager.calculateTotalIncome(monthlyTransactions);
-                double expenses = FinanceManager.calculateTotalExpenses(monthlyTransactions);
-                double netBalance = income - expenses;
-
-                monthlyTable.clearRows();
-                Object[] row = {
-                        FinanceManager.formatCurrency(income),
-                        FinanceManager.formatCurrency(expenses),
-                        FinanceManager.formatCurrency(netBalance),
-                        monthlyTransactions.size()
-                };
-                monthlyTable.addRow(row);
-
-                // Update category breakdown
-                Map<String, Double> categoryMap = CategoryReportManager.getCategoryBreakdown(user.getTransactions());
-                double totalExpenses = FinanceManager.calculateTotalExpenses(user.getTransactions());
-
-                categoryTable.clearRows();
-                List<Map.Entry<String, Double>> sortedCategories = categoryMap.entrySet().stream()
-                        .sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue()))
-                        .collect(Collectors.toList());
-
-                for (Map.Entry<String, Double> entry : sortedCategories) {
-                    double amount = entry.getValue();
-                    double percentage = totalExpenses > 0 ? (amount / totalExpenses) * 100 : 0;
-                    Object[] catRow = {
-                            entry.getKey(),
-                            FinanceManager.formatCurrency(amount),
-                            String.format("%.1f%%", percentage)
-                    };
-                    categoryTable.addRow(catRow);
-                }
+                content.revalidate();
+                content.repaint();
             }
         };
+    }
 
-        monthComboBox.addActionListener(e -> panel.refresh());
-        refreshButton.addActionListener(e -> panel.refresh());
+    private static JPanel createReportStat(String label, String value, Color color) {
+        JPanel p = new JPanel(new GridLayout(2, 1));
+        p.setOpaque(false);
+        JLabel l = new JLabel(label);
+        l.setFont(Theme.FONT_SMALL);
+        l.setForeground(Theme.TEXT_SECONDARY);
+        JLabel v = new JLabel(value);
+        v.setFont(Theme.FONT_TITLE); // Reusing title font for big numbers
+        v.setForeground(color);
+        p.add(l);
+        p.add(v);
+        return p;
+    }
+
+    private static JPanel createCategoryBar(String category, double amount, double percentage) {
+        JPanel panel = new JPanel(new BorderLayout(10, 5));
+        panel.setOpaque(false);
+        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+
+        JPanel top = new JPanel(new BorderLayout());
+        top.setOpaque(false);
+        JLabel name = new JLabel(category);
+        name.setFont(Theme.FONT_BODY);
+        name.setForeground(Theme.TEXT_PRIMARY);
+
+        JLabel val = new JLabel(String.format("%s (%.1f%%)", FinanceManager.formatCurrency(amount), percentage));
+        val.setFont(Theme.FONT_BODY);
+        val.setForeground(Theme.TEXT_PRIMARY);
+
+        top.add(name, BorderLayout.WEST);
+        top.add(val, BorderLayout.EAST);
+
+        JProgressBar bar = new JProgressBar(0, 100);
+        bar.setValue((int) percentage);
+        bar.setStringPainted(false);
+        bar.setBackground(Theme.SURFACE);
+        bar.setForeground(Theme.PRIMARY);
+        bar.setBorderPainted(false);
+        bar.setPreferredSize(new Dimension(100, 8));
+
+        panel.add(top, BorderLayout.CENTER);
+        panel.add(bar, BorderLayout.SOUTH);
 
         return panel;
     }
 
-    // Helper class to make panels refreshable
     public static abstract class RefreshablePanel extends JPanel {
-        private JPanel wrappedPanel;
-
         public RefreshablePanel(JPanel panel) {
-            this.wrappedPanel = panel;
             setLayout(new BorderLayout());
             add(panel, BorderLayout.CENTER);
         }

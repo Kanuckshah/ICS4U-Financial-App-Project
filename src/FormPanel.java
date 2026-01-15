@@ -18,11 +18,12 @@ public class FormPanel extends JPanel {
         this.currentRow = 0;
 
         setLayout(new BorderLayout());
-        setBackground(Color.WHITE);
-        setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        setBackground(Theme.BACKGROUND);
+        setBorder(BorderFactory.createEmptyBorder(Theme.PADDING_XL, Theme.PADDING_XL, Theme.PADDING_XL,
+                Theme.PADDING_XL));
 
         formPanel = new JPanel(new GridBagLayout());
-        formPanel.setBackground(Color.WHITE);
+        formPanel.setBackground(Theme.BACKGROUND);
 
         gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
@@ -30,7 +31,8 @@ public class FormPanel extends JPanel {
 
         if (title != null && !title.isEmpty()) {
             JLabel titleLabel = new JLabel(title);
-            titleLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 24));
+            titleLabel.setFont(Theme.FONT_TITLE);
+            titleLabel.setForeground(Theme.TEXT_PRIMARY);
             titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
             gbc.gridx = 0;
             gbc.gridy = currentRow++;
@@ -50,6 +52,8 @@ public class FormPanel extends JPanel {
         gbc.weightx = 0;
 
         JLabel label = new JLabel(field.getLabel());
+        label.setFont(Theme.FONT_BODY);
+        label.setForeground(Theme.TEXT_PRIMARY);
         formPanel.add(label, gbc);
 
         gbc.gridx = 1;
@@ -76,17 +80,21 @@ public class FormPanel extends JPanel {
 
         switch (field.getType()) {
             case PASSWORD:
-                component = new JPasswordField(field.getColumns());
+                component = new RoundedPasswordField(field.getColumns(), Theme.RADIUS_SMALL);
+                ((RoundedPasswordField) component).setFont(Theme.FONT_BODY);
+                ((RoundedPasswordField) component).setForeground(Theme.TEXT_PRIMARY);
+                ((RoundedPasswordField) component).setBackground(Theme.SURFACE);
+                ((RoundedPasswordField) component).setCaretColor(Theme.PRIMARY);
                 break;
             case NUMBER:
-                component = new JTextField(field.getColumns());
-                break;
             case DATE:
-                component = new JTextField(field.getColumns());
-                break;
             case TEXT:
             default:
-                component = new JTextField(field.getColumns());
+                component = new RoundedTextField(field.getColumns(), Theme.RADIUS_SMALL);
+                ((RoundedTextField) component).setFont(Theme.FONT_BODY);
+                ((RoundedTextField) component).setForeground(Theme.TEXT_PRIMARY);
+                ((RoundedTextField) component).setBackground(Theme.SURFACE);
+                ((RoundedTextField) component).setCaretColor(Theme.PRIMARY);
                 break;
         }
 
@@ -104,8 +112,8 @@ public class FormPanel extends JPanel {
     }
 
     public FormPanel addButtons(String... buttonLabels) {
-        buttonPanel = new JPanel(new FlowLayout());
-        buttonPanel.setBackground(Color.WHITE);
+        buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, Theme.PADDING_MEDIUM, 0));
+        buttonPanel.setBackground(Theme.BACKGROUND);
 
         gbc.gridy = currentRow++;
         gbc.gridx = 0;
@@ -123,8 +131,10 @@ public class FormPanel extends JPanel {
             addButtons();
         }
 
-        JButton button = new JButton(label);
-        button.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
+        // Create rounded button
+        boolean isPrimary = label.equalsIgnoreCase("Save") || label.equalsIgnoreCase("Login")
+                || label.equalsIgnoreCase("Register");
+        JButton button = Theme.createButton(label, isPrimary);
         button.addActionListener(listener);
         buttonPanel.add(button);
 

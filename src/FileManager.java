@@ -5,22 +5,22 @@ import java.util.List;
 
 public class FileManager {
     private static final String DATA_DIR = "user_data/";
-
+    
     private static void ensureDataDirectory() {
         File dir = new File(DATA_DIR);
         if (!dir.exists()) {
             dir.mkdirs();
         }
     }
-
+    
     private static String getUserFilePath(String username) {
         return DATA_DIR + username + ".txt";
     }
-
+    
     public static boolean saveUser(User user) {
         ensureDataDirectory();
         String filePath = getUserFilePath(user.getUsername());
-
+        
         try (PrintWriter writer = new PrintWriter(new FileWriter(filePath))) {
             writer.println("USERNAME:" + user.getUsername());
             writer.println("PASSWORD:" + user.getPassword());
@@ -33,11 +33,11 @@ public class FileManager {
                 writer.println("SAVINGS_TARGET_MONTHS:" + user.getSavingsTargetMonths());
             }
             writer.println("TRANSACTIONS_START");
-
+            
             for (Transaction transaction : user.getTransactions()) {
                 writer.println(transaction.formatForFile());
             }
-
+            
             writer.println("TRANSACTIONS_END");
             return true;
         } catch (IOException e) {
@@ -45,15 +45,15 @@ public class FileManager {
             return false;
         }
     }
-
+    
     public static User loadUser(String username) {
         String filePath = getUserFilePath(username);
         File file = new File(filePath);
-
+        
         if (!file.exists()) {
             return null;
         }
-
+        
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
             String password = null;
@@ -63,7 +63,7 @@ public class FileManager {
             int savingsTargetMonths = 0;
             List<Transaction> transactions = new ArrayList<>();
             boolean inTransactions = false;
-
+            
             while ((line = reader.readLine()) != null) {
                 if (line.startsWith("USERNAME:")) {
                 } else if (line.startsWith("PASSWORD:")) {
@@ -93,7 +93,7 @@ public class FileManager {
                     }
                 }
             }
-
+            
             if (password != null) {
                 User user = new User(username, password);
                 user.setMonthlyBudget(budget);
@@ -114,10 +114,10 @@ public class FileManager {
         } catch (NumberFormatException e) {
             System.err.println("Error parsing user data: " + e.getMessage());
         }
-
+        
         return null;
     }
-
+    
     private static Transaction parseTransaction(String line) {
         if (line.startsWith("Income|")) {
             return Income.fromFileString(line);
@@ -126,7 +126,7 @@ public class FileManager {
         }
         return null;
     }
-
+    
     public static boolean userExists(String username) {
         String filePath = getUserFilePath(username);
         File file = new File(filePath);

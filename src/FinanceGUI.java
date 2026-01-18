@@ -120,13 +120,13 @@ public class FinanceGUI implements PanelFactory.GUIController {
     }
 
     @Override
-    public boolean register(String username, String password) {
-        if (authManager.register(username, password)) {
+    public AuthManager.RegistrationResult register(String username, String password) {
+        AuthManager.RegistrationResult result = authManager.register(username, password);
+        if (result == AuthManager.RegistrationResult.SUCCESS) {
             currentUser = authManager.getCurrentUser();
             showDashboard();
-            return true;
         }
-        return false;
+        return result;
     }
 
     @Override

@@ -21,7 +21,7 @@ public class PanelFactory {
     public interface GUIController {
         boolean login(String username, String password);
 
-        boolean register(String username, String password);
+        AuthManager.RegistrationResult register(String username, String password);
 
         void logout();
 
@@ -92,8 +92,15 @@ public class PanelFactory {
                 gui.showError("Passwords do not match.", "Registration Error");
                 return;
             }
-            if (gui.register(username, password)) {
+            AuthManager.RegistrationResult result = gui.register(username, password);
+            if (result == AuthManager.RegistrationResult.SUCCESS) {
+                gui.showMessage("Registration successful! Please login.", "Success");
                 panel.clearFields();
+                gui.showLogin();
+            } else if (result == AuthManager.RegistrationResult.USERNAME_TAKEN) {
+                gui.showError("Username is already taken.", "Registration Error");
+            } else {
+                gui.showError("Invalid username or password.", "Registration Error");
             }
         });
         panel.addButton("Back to Login", e -> gui.showLogin());

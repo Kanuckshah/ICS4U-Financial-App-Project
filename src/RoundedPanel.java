@@ -2,16 +2,28 @@ import javax.swing.*;
 import java.awt.*;
 
 /**
- * Custom JPanel with truly rounded corners for cards
+ * A custom JPanel that supports rounded corners and optional border color.
+ * Uses anti-aliasing for smooth rendering.
  */
 public class RoundedPanel extends JPanel {
     private int radius;
     private Color borderColor;
 
+    /**
+     * Creates a rounded panel with the specified radius and transparent background.
+     * 
+     * @param radius The corner radius in pixels.
+     */
     public RoundedPanel(int radius) {
         this(radius, null);
     }
 
+    /**
+     * Creates a rounded panel with the specified radius and border color.
+     * 
+     * @param radius      The corner radius in pixels.
+     * @param borderColor The color of the border (null for no border).
+     */
     public RoundedPanel(int radius, Color borderColor) {
         this.radius = radius;
         this.borderColor = borderColor;

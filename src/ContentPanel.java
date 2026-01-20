@@ -4,6 +4,10 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A standard layout container for application pages.
+ * Includes optional sidebar, header, content area, and footer.
+ */
 public class ContentPanel extends JPanel {
     private JPanel headerPanel;
     private JPanel contentArea;
@@ -13,6 +17,12 @@ public class ContentPanel extends JPanel {
     private JLabel subtitleLabel;
     private List<StatCard> statCards;
 
+    /**
+     * Creates a new content panel.
+     * 
+     * @param title          The page title to display in the header.
+     * @param includeSidebar If true, adds the navigation sidebar.
+     */
     public ContentPanel(String title, boolean includeSidebar) {
         this.statCards = new ArrayList<>();
 

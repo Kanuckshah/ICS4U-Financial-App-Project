@@ -2,11 +2,24 @@
 import javax.swing.*;
 import java.awt.*;
 
+/**
+ * A dashboard widget that displays a statistic with an icon and optional trend
+ * color.
+ * Features a custom-painted icon background.
+ */
 public class StatCard extends RoundedPanel {
     private JLabel titleLabel;
     private JLabel valueLabel;
     private String iconSymbol;
 
+    /**
+     * Creates a new statistic card.
+     * 
+     * @param title       The label of the statistic.
+     * @param value       The value to display.
+     * @param iconSymbol  The emoji/symbol for the icon.
+     * @param accentColor The theme color for the icon and optional highlights.
+     */
     public StatCard(String title, String value, String iconSymbol, Color accentColor) {
         super(Theme.RADIUS_MEDIUM, Theme.BACKGROUND_LIGHT);
         this.iconSymbol = iconSymbol;

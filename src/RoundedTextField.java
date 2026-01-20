@@ -3,7 +3,8 @@ import java.awt.*;
 import java.awt.geom.RoundRectangle2D;
 
 /**
- * Custom JTextField with truly rounded corners and modern styling
+ * /**
+ * A custom JTextField with rounded corners and focus-state styling.
  */
 public class RoundedTextField extends JTextField {
     private int radius;
@@ -11,6 +12,12 @@ public class RoundedTextField extends JTextField {
     private Color focusBorderColor;
     private boolean isFocused = false;
 
+    /**
+     * Creates a rounded text field.
+     * 
+     * @param columns The number of columns to calculate preferred width.
+     * @param radius  The corner radius in pixels.
+     */
     public RoundedTextField(int columns, int radius) {
         super(columns);
         this.radius = radius;

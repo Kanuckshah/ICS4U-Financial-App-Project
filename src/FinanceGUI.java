@@ -3,6 +3,11 @@ import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Main controller for the GUI application.
+ * Manages the CardLayout navigation, user session state, and inter-panel
+ * communication.
+ */
 public class FinanceGUI implements PanelFactory.GUIController {
     private JFrame mainFrame;
     private AuthManager authManager;
@@ -20,6 +25,9 @@ public class FinanceGUI implements PanelFactory.GUIController {
         initializeGUI();
     }
 
+    /**
+     * Initializes the main frame, layout, and all sub-panels.
+     */
     private void initializeGUI() {
         mainFrame = new JFrame("Student Finance Tracker v2.0");
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -160,6 +168,9 @@ public class FinanceGUI implements PanelFactory.GUIController {
         }
     }
 
+    /**
+     * Makes the application visible to the user.
+     */
     public void display() {
         mainFrame.setVisible(true);
     }

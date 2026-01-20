@@ -3,7 +3,9 @@ import java.awt.*;
 import java.awt.geom.RoundRectangle2D;
 
 /**
- * Custom JButton with truly rounded corners and modern styling
+ * /**
+ * A custom JButton featuring rounded corners, hover effects, and modern
+ * styling.
  */
 public class RoundedButton extends JButton {
     private Color backgroundColor;
@@ -11,6 +13,14 @@ public class RoundedButton extends JButton {
     private int radius;
     private boolean isHovered = false;
 
+    /**
+     * Creates a new rounded button.
+     * 
+     * @param text       The button text.
+     * @param bgColor    The normal background color.
+     * @param hoverColor The background color when hovered.
+     * @param radius     The corner radius in pixels.
+     */
     public RoundedButton(String text, Color bgColor, Color hoverColor, int radius) {
         super(text);
         this.backgroundColor = bgColor;

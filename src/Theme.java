@@ -46,12 +46,14 @@ public class Theme {
     public static final int PADDING_SMALL = 10;
     public static final int PADDING_MEDIUM = 20;
     public static final int PADDING_LARGE = 30;
-    public static final int PADDING_XL = 32; // Restored for compatibility
-    public static final int PADDING_XXL = 48; // Restored for compatibility
+
+    // Legacy support
+    public static final int PADDING_XL = 32;
+    public static final int PADDING_XXL = 48;
 
     public static final int RADIUS_SMALL = 8;
-    public static final int RADIUS_MEDIUM = 20; // Smooth curves
-    public static final int RADIUS_LARGE = 30;
+    public static final int RADIUS_MEDIUM = 20; // Smooth curves for cards
+    public static final int RADIUS_LARGE = 30; // Pill shapes
 
     /**
      * Create a modern rounded button

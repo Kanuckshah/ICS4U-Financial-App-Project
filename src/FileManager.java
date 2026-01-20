@@ -3,24 +3,37 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Handles persistent storage of user data and transactions to the file system.
+ * Data is stored in text files under the user_data/ directory.
+ */
 public class FileManager {
     private static final String DATA_DIR = "user_data/";
-    
+
+    /**
+     * Ensures the data directory exists; creates it if valid.
+     */
     private static void ensureDataDirectory() {
         File dir = new File(DATA_DIR);
         if (!dir.exists()) {
             dir.mkdirs();
         }
     }
-    
+
     private static String getUserFilePath(String username) {
         return DATA_DIR + username + ".txt";
     }
-    
+
+    /**
+     * Saves a user's profile and transactions to a file.
+     * 
+     * @param user The User object to save.
+     * @return true if save was successful, false otherwise.
+     */
     public static boolean saveUser(User user) {
         ensureDataDirectory();
         String filePath = getUserFilePath(user.getUsername());
-        
+
         try (PrintWriter writer = new PrintWriter(new FileWriter(filePath))) {
             writer.println("USERNAME:" + user.getUsername());
             writer.println("PASSWORD:" + user.getPassword());
@@ -33,11 +46,11 @@ public class FileManager {
                 writer.println("SAVINGS_TARGET_MONTHS:" + user.getSavingsTargetMonths());
             }
             writer.println("TRANSACTIONS_START");
-            
+
             for (Transaction transaction : user.getTransactions()) {
                 writer.println(transaction.formatForFile());
             }
-            
+
             writer.println("TRANSACTIONS_END");
             return true;
         } catch (IOException e) {
@@ -45,15 +58,21 @@ public class FileManager {
             return false;
         }
     }
-    
+
+    /**
+     * Loads a user's profile and transactions from a file.
+     * 
+     * @param username The username to load.
+     * @return The populated User object, or null if not found or error.
+     */
     public static User loadUser(String username) {
         String filePath = getUserFilePath(username);
         File file = new File(filePath);
-        
+
         if (!file.exists()) {
             return null;
         }
-        
+
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
             String password = null;
@@ -63,7 +82,7 @@ public class FileManager {
             int savingsTargetMonths = 0;
             List<Transaction> transactions = new ArrayList<>();
             boolean inTransactions = false;
-            
+
             while ((line = reader.readLine()) != null) {
                 if (line.startsWith("USERNAME:")) {
                 } else if (line.startsWith("PASSWORD:")) {
@@ -93,7 +112,7 @@ public class FileManager {
                     }
                 }
             }
-            
+
             if (password != null) {
                 User user = new User(username, password);
                 user.setMonthlyBudget(budget);
@@ -114,10 +133,10 @@ public class FileManager {
         } catch (NumberFormatException e) {
             System.err.println("Error parsing user data: " + e.getMessage());
         }
-        
+
         return null;
     }
-    
+
     private static Transaction parseTransaction(String line) {
         if (line.startsWith("Income|")) {
             return Income.fromFileString(line);
@@ -126,7 +145,13 @@ public class FileManager {
         }
         return null;
     }
-    
+
+    /**
+     * Checks if a user file exists for the given username.
+     * 
+     * @param username The username to check.
+     * @return true if the user data file exists, false otherwise.
+     */
     public static boolean userExists(String username) {
         String filePath = getUserFilePath(username);
         File file = new File(filePath);

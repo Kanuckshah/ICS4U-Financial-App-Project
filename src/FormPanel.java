@@ -6,6 +6,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * A reusable panel for creating forms with consistent styling.
+ * Supports dynamic addition of fields and buttons.
+ */
 public class FormPanel extends JPanel {
     private Map<String, JComponent> fieldComponents;
     private JPanel formPanel;
@@ -44,6 +48,12 @@ public class FormPanel extends JPanel {
         add(formPanel, BorderLayout.CENTER);
     }
 
+    /**
+     * Adds a single field to the form layout.
+     * 
+     * @param field The configuration object for the field.
+     * @return This FormPanel instance for chaining.
+     */
     public FormPanel addField(FormField field) {
         gbc.gridy = currentRow++;
         gbc.gridx = 0;
@@ -141,6 +151,12 @@ public class FormPanel extends JPanel {
         return this;
     }
 
+    /**
+     * Retrieves the current value of a field.
+     * 
+     * @param fieldName The unique name of the field.
+     * @return The text value, or empty string if not found.
+     */
     public String getFieldValue(String fieldName) {
         JComponent component = fieldComponents.get(fieldName);
         if (component instanceof JTextField) {

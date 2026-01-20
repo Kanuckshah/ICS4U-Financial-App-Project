@@ -7,6 +7,12 @@ import java.awt.event.MouseEvent;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * The main navigation sidebar.
+ * Manages menu buttons, selection state, and logout integration.
+ * Wraps buttons in custom logic for hover/selected aesthetics tailored to the
+ * dark theme.
+ */
 public class Sidebar extends JPanel {
     private Map<String, JButton> menuButtons;
     private JButton logoutButton;
@@ -57,6 +63,12 @@ public class Sidebar extends JPanel {
         add(menuContainer, BorderLayout.CENTER);
     }
 
+    /**
+     * Adds a navigation menu item.
+     * 
+     * @param text     The button label (e.g., "Dashboard").
+     * @param listener The action to perform when clicked.
+     */
     public void addMenuItem(String text, ActionListener listener) {
         JButton button = createMenuButton(text, listener);
         menuButtons.put(text, button);
@@ -69,6 +81,11 @@ public class Sidebar extends JPanel {
         }
     }
 
+    /**
+     * Adds a logout button to the bottom of the sidebar.
+     * 
+     * @param listener The action to perform (e.g., show confirmation).
+     */
     public void addLogoutButton(ActionListener listener) {
         JPanel footerPanel = new JPanel(new BorderLayout());
         footerPanel.setBackground(BG_COLOR);
@@ -188,6 +205,12 @@ public class Sidebar extends JPanel {
         }
     }
 
+    /**
+     * Programmatically selects a menu item (e.g., on initial load).
+     * Updates the visual state of the button.
+     * 
+     * @param text The label of the menu item to select.
+     */
     public void selectMenuItem(String text) {
         JButton button = menuButtons.get(text);
         if (button != null) {

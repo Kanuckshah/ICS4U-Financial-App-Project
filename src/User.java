@@ -2,6 +2,10 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Represents a user of the application.
+ * Stores personal information, financial goals, and a history of transactions.
+ */
 public class User {
     private String username;
     private String password;
@@ -11,6 +15,12 @@ public class User {
     private LocalDate savingsTargetDate;
     private int savingsTargetMonths;
 
+    /**
+     * Creates a new User with the specified credentials.
+     * 
+     * @param username The unique username.
+     * @param password The user's password.
+     */
     public User(String username, String password) {
         this.username = username;
         this.password = password;
@@ -25,6 +35,12 @@ public class User {
         return username;
     }
 
+    /**
+     * Validates if the provided password matches the user's password.
+     * 
+     * @param password The password to check.
+     * @return true if the password matches, false otherwise.
+     */
     public boolean validatePassword(String password) {
         return this.password.equals(password);
     }
@@ -33,6 +49,11 @@ public class User {
         return transactions;
     }
 
+    /**
+     * Adds a new transaction to the user's history.
+     * 
+     * @param transaction The transaction to add.
+     */
     public void addTransaction(Transaction transaction) {
         transactions.add(transaction);
     }

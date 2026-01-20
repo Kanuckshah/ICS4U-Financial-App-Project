@@ -2,7 +2,8 @@ import javax.swing.*;
 import java.awt.*;
 
 /**
- * Custom JPasswordField with truly rounded corners and modern styling
+ * /**
+ * A custom JPasswordField with rounded corners and focus-state styling.
  */
 public class RoundedPasswordField extends JPasswordField {
     private int radius;
@@ -10,6 +11,12 @@ public class RoundedPasswordField extends JPasswordField {
     private Color focusBorderColor;
     private boolean isFocused = false;
 
+    /**
+     * Creates a rounded password field.
+     * 
+     * @param columns The number of columns to calculate preferred width.
+     * @param radius  The corner radius in pixels.
+     */
     public RoundedPasswordField(int columns, int radius) {
         super(columns);
         this.radius = radius;

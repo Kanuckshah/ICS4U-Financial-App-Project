@@ -16,8 +16,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Factory class for creating all application UI panels.
+ * Encapsulates the creation logic and dependency injection for the GUI.
+ */
 public class PanelFactory {
 
+    /**
+     * Interface for communicating back to the main GUI controller.
+     * Allows panels to request navigation and state updates.
+     */
     public interface GUIController {
         boolean login(String username, String password);
 
@@ -50,6 +58,12 @@ public class PanelFactory {
         User getCurrentUser();
     }
 
+    /**
+     * Creates the login screen panel.
+     * 
+     * @param gui The main controller.
+     * @return A constructed login panel.
+     */
     public static JPanel createLoginPanel(GUIController gui) {
         FormPanel panel = new FormPanel("Student Finance Tracker");
         List<FormField> fields = new ArrayList<>();
@@ -73,6 +87,12 @@ public class PanelFactory {
         return panel;
     }
 
+    /**
+     * Creates the registration screen panel.
+     * 
+     * @param gui The main controller.
+     * @return A constructed registration panel.
+     */
     public static JPanel createRegistrationPanel(GUIController gui) {
         FormPanel panel = new FormPanel("Create Account");
         List<FormField> fields = new ArrayList<>();
@@ -107,6 +127,13 @@ public class PanelFactory {
         return panel;
     }
 
+    /**
+     * Creates a panel for adding a transaction (Income or Expense).
+     * 
+     * @param gui      The main controller.
+     * @param isIncome True for Income, False for Expense.
+     * @return A constructed form panel.
+     */
     public static JPanel createAddTransactionPanel(GUIController gui, boolean isIncome) {
         FormPanel panel = new FormPanel(isIncome ? "Add Income" : "Add Expense");
         List<FormField> fields = new ArrayList<>();
@@ -150,6 +177,12 @@ public class PanelFactory {
         return panel;
     }
 
+    /**
+     * Creates the main dashboard panel with statistics and charts.
+     * 
+     * @param gui The main controller.
+     * @return A RefreshablePanel containing the dashboard.
+     */
     public static RefreshablePanel createDashboardPanel(GUIController gui) {
         ContentPanel panel = new ContentPanel("Dashboard", true);
         panel.getHeaderPanel().setVisible(false);
@@ -468,6 +501,12 @@ public class PanelFactory {
         return item;
     }
 
+    /**
+     * Creates the Budget & Savings management panel.
+     * 
+     * @param gui The main controller.
+     * @return A RefreshablePanel for managing goals.
+     */
     public static RefreshablePanel createBudgetSavingsPanel(GUIController gui) {
         JPanel main = new JPanel(new BorderLayout());
         main.setBackground(Theme.BACKGROUND);
@@ -631,6 +670,12 @@ public class PanelFactory {
         };
     }
 
+    /**
+     * Creates the panel displaying the full transaction history.
+     * 
+     * @param gui The main controller.
+     * @return A RefreshablePanel with a scrollable list of transactions.
+     */
     public static RefreshablePanel createTransactionHistoryPanel(GUIController gui) {
         JPanel mainConfig = new JPanel(new BorderLayout());
         mainConfig.setBackground(Theme.BACKGROUND);
@@ -772,6 +817,12 @@ public class PanelFactory {
         return item;
     }
 
+    /**
+     * Creates the reports panel with visual breakdowns.
+     * 
+     * @param gui The main controller.
+     * @return A RefreshablePanel with charts and summaries.
+     */
     public static RefreshablePanel createReportsPanel(GUIController gui) {
         JPanel main = new JPanel(new BorderLayout());
         main.setBackground(Theme.BACKGROUND);
@@ -912,6 +963,10 @@ public class PanelFactory {
         return panel;
     }
 
+    /**
+     * abstract wrapper for panels that need to update their data (e.g., after a
+     * transaction is added).
+     */
     public static abstract class RefreshablePanel extends JPanel {
         public RefreshablePanel(JPanel panel) {
             setLayout(new BorderLayout());
